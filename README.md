@@ -1,2 +1,2 @@
 # Arcinect
-A Kinect scanner application to build high quality 3D models for game development
+A 3D scanner application using Kinect sensor to build high quality 3D models for game development
