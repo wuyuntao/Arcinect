@@ -37,8 +37,15 @@ namespace Arcinect
             this.sensor = sensor;
             this.sensor.Open();
 
-            this.reader = sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color);
-            this.reader.MultiSourceFrameArrived += Reader_MultiSourceFrameArrived;
+            if (this.sensor.IsOpen)
+            {
+                this.reader = sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color);
+                this.reader.MultiSourceFrameArrived += Reader_MultiSourceFrameArrived;
+            }
+            else
+            {
+                logger.Error("Kinect sensor is not open");
+            }
         }
 
         /// <summary>

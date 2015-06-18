@@ -32,6 +32,8 @@ namespace Arcinect
                 DisposeUnmanaged();
 
                 GC.SuppressFinalize(this);
+
+                disposed = true;
             }
         }
 
