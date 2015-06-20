@@ -66,6 +66,8 @@
     </ApplicationDefinition>
     <Compile Include="Disposable.cs" />
     <Compile Include="Frame.cs" />
+    <Compile Include="Scan.cs" />
+    <Compile Include="Idle.cs" />
     <Compile Include="Scanner.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

@@ -1,8 +1,11 @@
 ﻿<Window x:Class="Arcinect.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525" Loaded="WindowLoaded" Closing="WindowClosing" >
+        Title="Arcinect" Height="700" Width="1000" Loaded="Window_Loaded" Closing="Window_Closing" >
     <Grid>
-        
+        <Button Name="ScanButton" Content="Scan" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="150" Click="ScanButton_Click"/>
+        <Button Name="RecordButton" Content="Record" HorizontalAlignment="Left" Margin="180,10,0,0" VerticalAlignment="Top" Width="150" Click="RecordButton_Click"/>
+        <Button Name="ReplayButton" Content="Replay" HorizontalAlignment="Left" Margin="350,10,0,0" VerticalAlignment="Top" Width="150" Click="ReplayButton_Click"/>
+        <Button Name="StopButton" Content="Stop" HorizontalAlignment="Left" Margin="520,10,0,0" VerticalAlignment="Top" Width="150" Click="StopButton_Click"/>
     </Grid>
 </Window>
