@@ -3,6 +3,11 @@ namespace Arcinect
 {
     class Scan : MainWindow.State
     {
+        /// <summary>
+        /// Active scanner 
+        /// </summary>
+        private Scanner scanner;
+
         public Scan(MainWindow mainWindow)
             : base(mainWindow)
         {
@@ -11,16 +16,16 @@ namespace Arcinect
             mainWindow.ReplayButton.IsEnabled = false;
             mainWindow.StopButton.IsEnabled = true;
 
-            Scanner = Scanner.Open();
+            this.scanner = Scanner.Open();
+
+            mainWindow.ColorCamera.Source = this.scanner.Frame.ColorBitmap;
         }
 
         protected override void Become(MainWindow.State nextState)
         {
-            if (Scanner != null)
-            {
-                Scanner.Dispose();
-                Scanner = null;
-            }
+            SafeDispose(ref this.scanner);
+
+            MainWindow.ColorCamera.Source = null;
 
             base.Become(nextState);
         }

@@ -28,11 +28,6 @@ namespace Arcinect
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// Active scanner 
-        /// </summary>
-        private Scanner scanner;
-
-        /// <summary>
         /// Current behavior
         /// </summary>
         private State state;
@@ -94,12 +89,6 @@ namespace Arcinect
                 get { return this.mainWindow; }
             }
 
-            protected Scanner Scanner
-            {
-                get { return this.mainWindow.scanner; }
-                set { this.mainWindow.scanner = value; }
-            }
-            
             #endregion
         }
 

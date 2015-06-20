@@ -7,5 +7,6 @@
         <Button Name="RecordButton" Content="Record" HorizontalAlignment="Left" Margin="180,10,0,0" VerticalAlignment="Top" Width="150" Click="RecordButton_Click"/>
         <Button Name="ReplayButton" Content="Replay" HorizontalAlignment="Left" Margin="350,10,0,0" VerticalAlignment="Top" Width="150" Click="ReplayButton_Click"/>
         <Button Name="StopButton" Content="Stop" HorizontalAlignment="Left" Margin="520,10,0,0" VerticalAlignment="Top" Width="150" Click="StopButton_Click"/>
+        <Image Name="ColorCamera" HorizontalAlignment="Left" Height="270" Margin="10,53,0,0" VerticalAlignment="Top" Width="480" Stretch="UniformToFill" />
     </Grid>
 </Window>

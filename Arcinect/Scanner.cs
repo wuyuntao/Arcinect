@@ -157,5 +157,10 @@ namespace Arcinect
 
             this.frame.Update(e.FrameReference);
         }
+
+        public Frame Frame
+        {
+            get { return this.frame; }
+        }
     }
 }

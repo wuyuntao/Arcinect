@@ -1,5 +1,8 @@
 ﻿using Microsoft.Kinect;
 using NLog;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Arcinect
 {
@@ -12,6 +15,7 @@ namespace Arcinect
         /// Logger of current class
         /// </summary>
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private const float DefaultDPI = 96;
 
         /// <summary>
         /// Image width of color frame
@@ -27,6 +31,8 @@ namespace Arcinect
         /// Intermediate storage for the color data received from the camera in 32bit color
         /// </summary>
         private byte[] colorData;
+
+        private WriteableBitmap colorBitmap;
 
         /// <summary>
         /// Image Width of depth frame
@@ -48,6 +54,7 @@ namespace Arcinect
             this.colorWidth = colorWidth;
             this.colorHeight = colorHeight;
             this.colorData = new byte[colorWidth * colorHeight * sizeof(int)];
+            this.colorBitmap = new WriteableBitmap(colorWidth, colorHeight, DefaultDPI, DefaultDPI, PixelFormats.Bgr32, null);
 
             this.depthWidth = depthWidth;
             this.depthHeight = depthHeight;
@@ -58,6 +65,9 @@ namespace Arcinect
         /// Update frame data of color / depth frames
         /// </summary>
         /// <param name="frameReference"></param>
+
+        #region Update from Kinect sensor
+       
         public void Update(MultiSourceFrameReference frameReference)
         {
             var multiSourceFrame = frameReference.AcquireFrame();
@@ -83,35 +93,82 @@ namespace Arcinect
                         return;
                     }
 
-                    var colorFrameDescription = colorFrame.FrameDescription;
-                    var colorFrameSize = colorFrameDescription.Width * colorFrameDescription.Height * sizeof(int);
-
-                    if (colorFrameSize != this.colorData.Length)
-                    {
-                        logger.Error("Size of ColorFrame does not match. Expected: {0}, Actual: {1}", this.colorData.Length, colorFrameSize);
-                    }
-                    else
-                    {
-                        colorFrame.CopyConvertedFrameDataToArray(this.colorData, ColorImageFormat.Rgba);
-
-                        logger.Trace("ColorFrame updated");
-                    }
-
-                    var depthFrameDescription = depthFrame.FrameDescription;
-                    var depthFrameSize = depthFrameDescription.Width * depthFrameDescription.Height;
-
-                    if (depthFrameSize != this.depthData.Length)
-                    {
-                        logger.Error("Size of DepthFrame does not match. Expected: {0}, Actual: {1}", this.depthData.Length, depthFrameSize);
-                    }
-                    else
-                    {
-                        depthFrame.CopyFrameDataToArray(this.depthData);
-
-                        logger.Trace("DepthFrame updated");
-                    }
+                    UpdateColorData(colorFrame);
+                    UpdateDepthData(depthFrame);
                 }
             }
         }
+
+        private void UpdateColorData(ColorFrame colorFrame)
+        {
+            var colorFrameDescription = colorFrame.FrameDescription;
+            if (this.colorWidth == colorFrameDescription.Width && this.colorHeight == colorFrameDescription.Height)
+            {
+                colorFrame.CopyConvertedFrameDataToArray(this.colorData, ColorImageFormat.Rgba);
+
+                UpdateColorBitmap(colorFrame);
+
+                logger.Trace("ColorFrame updated");
+            }
+            else
+            {
+                logger.Error("Size of ColorFrame does not match. Expected: {0}x{1}, Actual: {2}x{3}",
+                    this.colorWidth, this.colorHeight, colorFrameDescription.Width, colorFrameDescription.Height);
+            }
+        }
+
+        private void UpdateColorBitmap(ColorFrame colorFrame)
+        {
+            var colorFrameDescription = colorFrame.FrameDescription;
+            using (var colorBuffer = colorFrame.LockRawImageBuffer())
+            {
+                this.colorBitmap.Lock();
+
+                // verify data and write the new color frame data to the display bitmap
+                if ((colorFrameDescription.Width == this.colorBitmap.PixelWidth) && (colorFrameDescription.Height == this.colorBitmap.PixelHeight))
+                {
+                    colorFrame.CopyConvertedFrameDataToIntPtr(
+                        this.colorBitmap.BackBuffer,
+                        (uint)(colorFrameDescription.Width * colorFrameDescription.Height * 4),
+                        ColorImageFormat.Bgra);
+
+                    this.colorBitmap.AddDirtyRect(new Int32Rect(0, 0, this.colorBitmap.PixelWidth, this.colorBitmap.PixelHeight));
+                }
+                else
+                {
+                    logger.Error("Size of ColorBitmap does not match. Expected: {0}x{1}, Actual: {2}x{3}",
+                        this.colorBitmap.PixelWidth, this.colorBitmap.PixelHeight, colorFrameDescription.Width, colorFrameDescription.Height);
+                }
+
+                this.colorBitmap.Unlock();
+            }
+        }
+
+        private void UpdateDepthData(DepthFrame depthFrame)
+        {
+            var depthFrameDescription = depthFrame.FrameDescription;
+            if (this.depthWidth == depthFrameDescription.Width && this.depthHeight == depthFrameDescription.Height)
+            {
+                depthFrame.CopyFrameDataToArray(this.depthData);
+
+                logger.Trace("DepthFrame updated");
+            }
+            else
+            {
+                logger.Error("Size of DepthFrame does not match. Expected: {0}x{1}, Actual: {2}x{3}",
+                    this.depthWidth, this.depthHeight, depthFrameDescription.Width, depthFrameDescription.Height);
+            }
+        }
+        
+        #endregion
+
+        #region Properties
+
+        public BitmapSource ColorBitmap
+        {
+            get { return this.colorBitmap; }
+        }
+        
+        #endregion
     }
 }
