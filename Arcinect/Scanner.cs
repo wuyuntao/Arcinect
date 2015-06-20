@@ -30,6 +30,11 @@ namespace Arcinect
         /// </summary>
         private MultiSourceFrameReader reader;
 
+        /// <summary>
+        /// Frame data
+        /// </summary>
+        private Frame frame;
+
         #region Init / Dispose
 
         Scanner(KinectSensor sensor)
@@ -40,7 +45,15 @@ namespace Arcinect
             if (this.sensor.IsOpen)
             {
                 this.reader = sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color);
+
+                var colorFrameDescription = this.sensor.ColorFrameSource.FrameDescription;
+                var depthFrameDescription = this.sensor.DepthFrameSource.FrameDescription;
+
+                this.frame = new Frame(colorFrameDescription.Width, colorFrameDescription.Height, depthFrameDescription.Width, depthFrameDescription.Height);
+
                 this.reader.MultiSourceFrameArrived += Reader_MultiSourceFrameArrived;
+
+                logger.Trace("Kinect sensor is open");
             }
             else
             {
@@ -57,7 +70,7 @@ namespace Arcinect
             if (instance == null && IsHardwareCompatible())
             {
                 var sensor = KinectSensor.GetDefault();
-                if (sensor == null || !sensor.IsAvailable)
+                if (sensor == null)
                 {
                     logger.Error("Kinect sensor is neither connected nor available");
                 }
@@ -140,6 +153,9 @@ namespace Arcinect
 
         private void Reader_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
+            logger.Trace("Frame arrived");
+
+            this.frame.Update(e.FrameReference);
         }
     }
 }
