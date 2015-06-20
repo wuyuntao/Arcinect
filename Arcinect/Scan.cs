@@ -19,6 +19,7 @@ namespace Arcinect
             this.scanner = Scanner.Open();
 
             mainWindow.ColorCamera.Source = this.scanner.Frame.ColorBitmap;
+            mainWindow.DepthCamera.Source = this.scanner.Frame.DepthBitmap;
         }
 
         protected override void Become(MainWindow.State nextState)
@@ -26,6 +27,7 @@ namespace Arcinect
             SafeDispose(ref this.scanner);
 
             MainWindow.ColorCamera.Source = null;
+            MainWindow.DepthCamera.Source = null;
 
             base.Become(nextState);
         }
