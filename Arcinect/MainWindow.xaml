@@ -7,6 +7,8 @@
         <Button Name="RecordButton" Content="Record" HorizontalAlignment="Left" Margin="180,10,0,0" VerticalAlignment="Top" Width="150" Click="RecordButton_Click"/>
         <Button Name="ReplayButton" Content="Replay" HorizontalAlignment="Left" Margin="350,10,0,0" VerticalAlignment="Top" Width="150" Click="ReplayButton_Click"/>
         <Button Name="StopButton" Content="Stop" HorizontalAlignment="Left" Margin="520,10,0,0" VerticalAlignment="Top" Width="150" Click="StopButton_Click"/>
+        <Button Name="SaveButton" Content="Save" HorizontalAlignment="Left" Margin="690,10,0,0" VerticalAlignment="Top" Width="150" Click="SaveButton_Click"/>
+
         <Image Name="ColorCamera" HorizontalAlignment="Left" Height="270" Margin="10,60,0,0" VerticalAlignment="Top" Width="480" Stretch="UniformToFill" />
         <Image Name="DepthCamera" HorizontalAlignment="Left" Height="270" Margin="520,60,0,0" VerticalAlignment="Top" Width="326" Stretch="UniformToFill" />
     </Grid>

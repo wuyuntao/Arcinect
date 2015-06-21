@@ -15,6 +15,7 @@ namespace Arcinect
             mainWindow.RecordButton.IsEnabled = false;
             mainWindow.ReplayButton.IsEnabled = false;
             mainWindow.StopButton.IsEnabled = true;
+            mainWindow.SaveButton.IsEnabled = true;
 
             this.scanner = Scanner.Open();
 
@@ -37,6 +38,11 @@ namespace Arcinect
             base.StopButton_Click(sender, e);
 
             Become(new Idle(MainWindow));
+        }
+
+        public override void SaveButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            base.SaveButton_Click(sender, e);
         }
     }
 }

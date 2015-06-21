@@ -32,8 +32,11 @@ namespace Arcinect
         /// </summary>
         private State state;
 
-        #region EventHandler
+        #region State
 
+        /// <summary>
+        /// Base class of MainWindow states
+        /// </summary>
         internal abstract class State : Disposable
         {
             /// <summary>
@@ -78,6 +81,11 @@ namespace Arcinect
             public virtual void StopButton_Click(object sender, RoutedEventArgs e)
             {
                 logger.Trace("StopButton is clicked");
+            }
+
+            public virtual void SaveButton_Click(object sender, RoutedEventArgs e)
+            {
+                logger.Trace("SaveButton is clicked");
             }
 
             #endregion
@@ -152,6 +160,12 @@ namespace Arcinect
         {
             if (this.state != null)
                 this.state.StopButton_Click(sender, e);
+        }
+
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.state != null)
+                this.state.SaveButton_Click(sender, e);
         }
     }
 }

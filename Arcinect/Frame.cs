@@ -1,5 +1,4 @@
 ﻿using Microsoft.Kinect;
-using Microsoft.Kinect.Fusion;
 using NLog;
 using System;
 using System.Windows;

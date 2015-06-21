@@ -11,6 +11,7 @@ namespace Arcinect
             mainWindow.RecordButton.IsEnabled = true;
             mainWindow.ReplayButton.IsEnabled = true;
             mainWindow.StopButton.IsEnabled = false;
+            mainWindow.SaveButton.IsEnabled = false;
         }
 
         public override void ScanButton_Click(object sender, System.Windows.RoutedEventArgs e)

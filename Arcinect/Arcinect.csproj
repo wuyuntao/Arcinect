@@ -66,6 +66,7 @@
     </ApplicationDefinition>
     <Compile Include="Disposable.cs" />
     <Compile Include="Frame.cs" />
+    <Compile Include="ObjMeshWriter.cs" />
     <Compile Include="Scan.cs" />
     <Compile Include="Idle.cs" />
     <Compile Include="Scanner.cs" />
