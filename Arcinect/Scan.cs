@@ -3,10 +3,9 @@ namespace Arcinect
 {
     class Scan : MainWindow.State
     {
-        /// <summary>
-        /// Active scanner 
-        /// </summary>
         private Scanner scanner;
+
+        private VolumeBuilder volume;
 
         public Scan(MainWindow mainWindow)
             : base(mainWindow)
@@ -18,6 +17,7 @@ namespace Arcinect
             mainWindow.SaveButton.IsEnabled = true;
 
             this.scanner = Scanner.Open();
+            this.volume = new VolumeBuilder(scanner);
 
             mainWindow.ColorCamera.Source = this.scanner.Frame.ColorBitmap;
             mainWindow.DepthCamera.Source = this.scanner.Frame.DepthBitmap;
