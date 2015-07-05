@@ -24,9 +24,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -34,6 +37,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Kinect, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -66,12 +70,15 @@
     </ApplicationDefinition>
     <Compile Include="Disposable.cs" />
     <Compile Include="Frame.cs" />
+    <Compile Include="MathUtils.cs" />
     <Compile Include="ObjMeshWriter.cs" />
     <Compile Include="Scan.cs" />
     <Compile Include="Idle.cs" />
     <Compile Include="Scanner.cs" />
     <Compile Include="VolumeBuilder.cs" />
     <Compile Include="VolumeBuilderPreferences.cs" />
+    <Compile Include="Wpf3DTools\MathUtils.cs" />
+    <Compile Include="Wpf3DTools\ScreenSpaceLines3D.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

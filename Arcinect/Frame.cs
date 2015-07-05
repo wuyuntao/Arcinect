@@ -188,9 +188,39 @@ namespace Arcinect
 
         #region Properties
 
+        public int ColorWidth
+        {
+            get { return this.colorWidth; }
+        }
+
+        public int ColorHeight
+        {
+            get { return this.colorHeight; }
+        }
+
+        public byte[] ColorData
+        {
+            get { return this.colorData; }
+        }
+
         public BitmapSource ColorBitmap
         {
             get { return this.colorBitmap; }
+        }
+
+        public int DepthWidth
+        {
+            get { return this.depthWidth; }
+        }
+
+        public int DepthHeight
+        {
+            get { return this.depthHeight; }
+        }
+
+        public ushort[] DepthData
+        {
+            get { return this.depthData; }
         }
 
         public BitmapSource DepthBitmap

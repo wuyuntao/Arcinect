@@ -40,5 +40,97 @@ namespace Arcinect
         /// returned as invalid (0). Max depth must be greater than 0.
         /// </summary>
         public float MaxDepthClip = FusionDepthProcessor.DefaultMaximumDepth;
+
+        /// <summary>
+        /// Frame interval we calculate the deltaFromReferenceFrame 
+        /// </summary>
+        public int DeltaFrameCalculationInterval = 2;
+
+        /// <summary>
+        /// The factor to downsample the depth image by for AlignPointClouds
+        /// </summary>
+        public int DownsampleFactor = 2;
+
+        /// <summary>
+        /// Maximum residual alignment energy where tracking is still considered successful
+        /// </summary>
+        public int SmoothingKernelWidth = 1; // 0=just copy, 1=3x3, 2=5x5, 3=7x7, here we create a 3x3 kernel
+
+        /// <summary>
+        /// Maximum residual alignment energy where tracking is still considered successful
+        /// </summary>
+        public float SmoothingDistanceThreshold = 0.04f; // 4cm, could use up to around 0.1f;
+
+        /// <summary>
+        /// Maximum translation threshold between successive poses when using AlignPointClouds
+        /// </summary>
+        public float MaxTranslationDeltaAlignPointClouds = 0.3f; // 0.15 - 0.3m per frame typical
+
+        /// <summary>
+        /// Maximum rotation threshold between successive poses when using AlignPointClouds
+        /// </summary>
+        public float MaxRotationDeltaAlignPointClouds = 20.0f; // 10-20 degrees per frame typica
+
+        /// <summary>
+        /// CameraPoseFinderDistanceThresholdReject is a threshold used following the minimum distance 
+        /// calculation between the input frame and the camera pose finder database. This calculated value
+        /// between 0 and 1.0f must be less than or equal to the threshold in order to run the pose finder,
+        /// as the input must at least be similar to the pose finder database for a correct pose to be
+        /// matched.
+        /// </summary>
+        public float CameraPoseFinderDistanceThresholdReject = 1.0f; // a value of 1.0 means no rejection
+        
+        /// <summary>
+        /// Here we set a high limit on the maximum residual alignment energy where we consider the tracking
+        /// with AlignPointClouds to have succeeded. Typically this value would be around 0.005f to 0.006f.
+        /// (Lower residual alignment energy after relocalization is considered better.)
+        /// </summary>
+        public float MaxAlignPointCloudsEnergyForSuccess = 0.006f;
+
+        /// <summary>
+        /// The maximum number of matched poseCount we consider when finding the camera pose. 
+        /// Although the matches are ranked, so we look at the highest probability match first, a higher 
+        /// value has a greater chance of finding a good match overall, but has the trade-off of being 
+        /// slower. Typically we test up to around the 5 best matches, after which is may be better just
+        /// to try again with the next input depth frame if no good match is found.
+        /// </summary>
+        public int MaxCameraPoseFinderPoseTests = 5;
+
+        /// <summary>
+        /// Here we set a low limit on the residual alignment energy, below which we reject a tracking
+        /// success report from AlignPointClouds and believe it to have failed. This can typically be around 0.
+        /// </summary>
+        public float MinAlignPointCloudsEnergyForSuccess = 0.0f;
+
+        /// <summary>
+        /// How many frames after starting tracking will will wait before starting to store
+        /// image frames to the pose finder database. Here we set 200 successful frames (~7s).
+        /// </summary>
+        public int MinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure = 200;
+
+        /// <summary>
+        /// Image integration weight
+        /// </summary>
+        public short IntegrationWeight = FusionDepthProcessor.DefaultIntegrationWeight;
+
+        /// <summary>
+        /// Frame interval we update the camera pose finder database.
+        /// </summary>
+        public int CameraPoseFinderProcessFrameCalculationInterval = 5;
+
+        /// <summary>
+        /// How many frames after starting tracking will will wait before starting to store
+        /// image frames to the pose finder database. Here we set 45 successful frames (1.5s).
+        /// </summary>
+        public int MinSuccessfulTrackingFramesForCameraPoseFinder = 45;
+
+        /// <summary>
+        /// CameraPoseFinderDistanceThresholdAccept is a threshold passed to the ProcessFrame 
+        /// function in the camera pose finder interface. The minimum distance between the input frame and
+        /// the pose finder database must be greater than or equal to this value for a new pose to be 
+        /// stored in the database, which regulates how close together poseCount are stored in the database.
+        /// </summary>
+        public float CameraPoseFinderDistanceThresholdAccept = 0.1f;
+
     }
 }
