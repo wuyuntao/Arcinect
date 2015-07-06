@@ -33,14 +33,11 @@ namespace Arcinect
             var maxRot = (maxRotDegrees * (float)Math.PI) / 180.0f;
 
             // Calculate the deltas
-            var eulerInitial = RotationMatrixToEulerFloatArray(initial);
-            var eulerFinal = RotationMatrixToEulerFloatArray(final);
+            var eulerInitial = initial.ToEulerRotation();
+            var eulerFinal = final.ToEulerRotation();
 
-            var transInitial = ExtractTranslationFloatArray(initial);
-            var transFinal = ExtractTranslationFloatArray(final);
-
-            var eulerDeltas = new float[3];
-            var transDeltas = new float[3];
+            var transInitial = initial.ToTranslation();
+            var transFinal = final.ToTranslation();
 
             for (int i = 0; i < 3; i++)
             {
@@ -54,15 +51,10 @@ namespace Arcinect
                     eulerFinal[i] -= (float)(Math.PI * 2);
                 }
 
-                eulerDeltas[i] = eulerInitial[i] - eulerFinal[i];
-                transDeltas[i] = transInitial[i] - transFinal[i];
+                var eulerDelta = eulerInitial[i] - eulerFinal[i];
+                var transDelta = transInitial[i] - transFinal[i];
 
-                if (Math.Abs(eulerDeltas[i]) > maxRot)
-                {
-                    return false;
-                }
-
-                if (Math.Abs(transDeltas[i]) > maxTrans)
+                if (Math.Abs(eulerDelta) > maxRot || Math.Abs(transDelta) > maxTrans)
                 {
                     return false;
                 }
@@ -77,19 +69,14 @@ namespace Arcinect
         /// </summary>
         /// <param name="transform">The transform matrix.</param>
         /// <returns>Array of floating point values for Euler angle rotations around x,y,z.</returns>
-        public static float[] RotationMatrixToEulerFloatArray(Matrix4 transform)
+        public static float[] ToEulerRotation(this Matrix4 transform)
         {
-            float[] rotation = new float[3];
-
-            float phi = (float)Math.Atan2(transform.M23, transform.M33);
-            float theta = (float)Math.Asin(-transform.M13);
-            float psi = (float)Math.Atan2(transform.M12, transform.M11);
-
-            rotation[0] = phi;  // This is rotation about x,y,z, or pitch, yaw, roll respectively
-            rotation[1] = theta;
-            rotation[2] = psi;
-
-            return rotation;
+            return new float[3]
+            {
+                (float)Math.Atan2(transform.M23, transform.M33),    // phi
+                (float)Math.Asin(-transform.M13),                   // theta
+                (float)Math.Atan2(transform.M12, transform.M11),    // psi
+            };
         }
 
         /// <summary>
@@ -97,16 +84,9 @@ namespace Arcinect
         /// </summary>
         /// <param name="transform">The transform matrix.</param>
         /// <returns>Array of floating point values for translation in x,y,z.</returns>
-        public static float[] ExtractTranslationFloatArray(Matrix4 transform)
+        public static float[] ToTranslation(this Matrix4 transform)
         {
-            float[] translation = new float[3];
-
-            translation[0] = transform.M41;
-            translation[1] = transform.M42;
-            translation[2] = transform.M43;
-
-            return translation;
+            return new float[] { transform.M41, transform.M42, transform.M43 };
         }
-
     }
 }
