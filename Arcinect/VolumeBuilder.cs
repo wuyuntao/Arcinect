@@ -2,11 +2,19 @@
 using NLog;
 using System;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Arcinect
 {
     class VolumeBuilder : Disposable
     {
+        /// <summary>
+        /// Default DPI of system
+        /// </summary>
+        private const float DefaultSystemDPI = 96;
+
         /// <summary>
         /// Logger of current class
         /// </summary>
@@ -58,11 +66,6 @@ namespace Arcinect
         private FusionColorImageFrame shadedSurfaceFrame;
 
         /// <summary>
-        /// Shaded surface normals frame from shading point cloud frame
-        /// </summary>
-        private FusionColorImageFrame shadedSurfaceNormalsFrame;
-
-        /// <summary>
         /// Calculated point cloud frame from image integration
         /// </summary>
         private FusionPointCloudImageFrame raycastPointCloudFrame;
@@ -97,6 +100,11 @@ namespace Arcinect
         private FusionColorImageFrame downsampledDeltaFromReferenceFrameColorFrame;
 
         /// <summary>
+        /// Bitmap contains shaded surface frame data for rendering
+        /// </summary>
+        private WriteableBitmap volumeBitmap;
+
+        /// <summary>
         /// Intermediate storage for the color data received from the camera in 32bit color, re-sampled to depth image size
         /// </summary>
         private int[] resampledColorData;
@@ -117,6 +125,11 @@ namespace Arcinect
         private int[] deltaFromReferenceFramePixelsArgb;
 
         /// <summary>
+        /// Pixels buffer of shaded surface frame in 32bit color
+        /// </summary>
+        private int[] shadedSurfaceFramePixelsArgb;
+
+        /// <summary>
         /// Alignment energy from AlignDepthFloatToReconstruction for current frame 
         /// </summary>
         private float alignmentEnergy;
@@ -135,6 +148,11 @@ namespace Arcinect
         /// The transformation between the world and camera view coordinate system
         /// </summary>
         private Matrix4 worldToCameraTransform;
+
+        /// <summary>
+        /// The color mapping of the rendered reconstruction visualization. 
+        /// </summary>
+        private Matrix4 worldToBGRTransform;
 
         /// <summary>
         /// The default transformation between the world and volume coordinate system
@@ -187,10 +205,24 @@ namespace Arcinect
             }
 
             this.source = source;
+            this.source.Frame.OnDataUpdate += OnFrameDataUpdate;
+
             this.preferences = parameters;
 
             // Set the world-view transform to identity, so the world origin is the initial camera location.
             this.worldToCameraTransform = Matrix4.Identity;
+
+            // Map world X axis to blue channel, Y axis to green channel and Z axis to red channel,
+            // normalizing each to the range [0, 1]. We also add a shift of 0.5 to both X,Y channels
+            // as the world origin starts located at the center of the front face of the volume,
+            // hence we need to map negative x,y world vertex locations to positive color values.
+            this.worldToBGRTransform = Matrix4.Identity;
+            this.worldToBGRTransform.M11 = this.preferences.VoxelsPerMeter / this.preferences.VoxelsX;
+            this.worldToBGRTransform.M22 = this.preferences.VoxelsPerMeter / this.preferences.VoxelsY;
+            this.worldToBGRTransform.M33 = this.preferences.VoxelsPerMeter / this.preferences.VoxelsZ;
+            this.worldToBGRTransform.M41 = 0.5f;
+            this.worldToBGRTransform.M42 = 0.5f;
+            this.worldToBGRTransform.M44 = 1.0f;
 
             var volumeParameters = new ReconstructionParameters(parameters.VoxelsPerMeter, parameters.VoxelsX, parameters.VoxelsY, parameters.VoxelsZ);
             this.volume = ColorReconstruction.FusionCreateReconstruction(volumeParameters, ReconstructionProcessor.Amp, -1, this.worldToCameraTransform);
@@ -205,7 +237,6 @@ namespace Arcinect
             this.resampledColorFrameDepthAligned = new FusionColorImageFrame(depthWidth, depthHeight);
             this.deltaFromReferenceFrame = new FusionFloatImageFrame(depthWidth, depthHeight);
             this.shadedSurfaceFrame = new FusionColorImageFrame(depthWidth, depthHeight);
-            this.shadedSurfaceNormalsFrame = new FusionColorImageFrame(depthWidth, depthHeight);
             this.raycastPointCloudFrame = new FusionPointCloudImageFrame(depthWidth, depthHeight);
             this.depthPointCloudFrame = new FusionPointCloudImageFrame(depthWidth, depthHeight);
 
@@ -223,8 +254,11 @@ namespace Arcinect
             this.downsampledDepthData = new float[downsampledDepthSize];
             this.downsampledDeltaFromReferenceColorPixels = new int[downsampledDepthSize];
             this.deltaFromReferenceFramePixelsArgb = new int[depthSize];
+            this.shadedSurfaceFramePixelsArgb = new int[this.shadedSurfaceFrame.PixelDataLength];
 
             this.defaultWorldToVolumeTransform = this.volume.GetCurrentWorldToVolumeTransform();
+
+            this.volumeBitmap = new WriteableBitmap(depthWidth, depthHeight, DefaultSystemDPI, DefaultSystemDPI, PixelFormats.Bgr32, null);
 
             // Create a camera pose finder with default parameters
             this.cameraPoseFinder = CameraPoseFinder.FusionCreateCameraPoseFinder(CameraPoseFinderParameters.Defaults);
@@ -236,6 +270,8 @@ namespace Arcinect
 
         protected override void DisposeManaged()
         {
+            this.source.Frame.OnDataUpdate -= OnFrameDataUpdate;
+
             SafeDispose(ref this.volume);
 
             SafeDispose(ref this.depthFloatFrame);
@@ -244,7 +280,6 @@ namespace Arcinect
             SafeDispose(ref this.resampledColorFrameDepthAligned);
             SafeDispose(ref this.deltaFromReferenceFrame);
             SafeDispose(ref this.shadedSurfaceFrame);
-            SafeDispose(ref this.shadedSurfaceNormalsFrame);
             SafeDispose(ref this.raycastPointCloudFrame);
             SafeDispose(ref this.depthPointCloudFrame);
             SafeDispose(ref this.downsampledDepthFloatFrame);
@@ -304,6 +339,11 @@ namespace Arcinect
 
         #region Process frames
 
+        private void OnFrameDataUpdate(object sender)
+        {
+            Process();
+        }
+
         /// <summary>
         /// The main process function
         /// </summary>
@@ -326,6 +366,9 @@ namespace Arcinect
                 {
                     // Integrate depth
                     IntegrateData();
+
+                    // Raycast and render
+                    UpdateVolumeData();
 
                     // Update camera pose finder, adding key frames to the database
                     if (!this.trackingHasFailedPreviously
@@ -761,10 +804,10 @@ namespace Arcinect
             // 2) camera pose finder is off and we have paused capture
             // 3) camera pose finder is on and we are still under the m_cMinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure
             //    number of successful frames count.
-            var integrateData = !this.trackingFailed 
-                    && (!this.cameraPoseFinderAvailable 
-                    || (this.cameraPoseFinderAvailable 
-                    && !(this.trackingHasFailedPreviously 
+            var integrateData = !this.trackingFailed
+                    && (!this.cameraPoseFinderAvailable
+                    || (this.cameraPoseFinderAvailable
+                    && !(this.trackingHasFailedPreviously
                     && this.successfulFrameCount < this.preferences.MinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure)));
 
             // Integrate the frame to volume
@@ -781,6 +824,9 @@ namespace Arcinect
             }
         }
 
+        /// <summary>
+        /// Update the camera pose finder data.
+        /// </summary
         private void UpdateCameraPoseFinder()
         {
             ProcessColorForCameraPoseFinder();
@@ -797,6 +843,44 @@ namespace Arcinect
             // hence we always reset both the reconstruction and database when changing the mirror depth setting.
             this.cameraPoseFinder.ProcessFrame(this.depthFloatFrame, this.resampledColorFrame, this.worldToCameraTransform, this.preferences.CameraPoseFinderDistanceThresholdAccept,
                     out addedPose, out poseHistoryTrimmed);
+        }
+
+        /// <summary>
+        /// Update the volume data.
+        /// </summary
+        private void UpdateVolumeData()
+        {
+            // For capture color
+            this.volume.CalculatePointCloud(this.raycastPointCloudFrame, this.shadedSurfaceFrame, this.worldToCameraTransform);
+
+            this.volume.CalculatePointCloud(this.raycastPointCloudFrame, this.worldToCameraTransform);
+
+            // Shade point cloud frame for rendering
+            FusionDepthProcessor.ShadePointCloud(
+                this.raycastPointCloudFrame,
+                this.worldToCameraTransform,
+                this.worldToBGRTransform,
+                this.shadedSurfaceFrame,
+                 null);
+
+            // Copy pixel data to pixel buffer
+            this.shadedSurfaceFrame.CopyPixelDataTo(this.shadedSurfaceFramePixelsArgb);
+
+            // Write pixels to bitmap
+            this.volumeBitmap.WritePixels(
+                    new Int32Rect(0, 0, this.shadedSurfaceFrame.Width, this.shadedSurfaceFrame.Height),
+                    this.shadedSurfaceFramePixelsArgb,
+                    this.volumeBitmap.PixelWidth * sizeof(int),
+                    0);
+        }
+
+        #endregion
+
+        #region Properties
+
+        public BitmapSource VolumeBitmap
+        {
+            get { return this.volumeBitmap; }
         }
 
         #endregion

@@ -62,6 +62,10 @@ namespace Arcinect
         /// </summary>
         private WriteableBitmap depthBitmap;
 
+        public delegate void DataUpdateEventHandler(object sender);
+
+        public event DataUpdateEventHandler OnDataUpdate;
+
         public Frame(int colorWidth, int colorHeight, int depthWidth, int depthHeight)
         {
             this.colorWidth = colorWidth;
@@ -109,6 +113,9 @@ namespace Arcinect
 
                     UpdateColorData(colorFrame);
                     UpdateDepthData(depthFrame);
+
+                    if (OnDataUpdate != null)
+                        OnDataUpdate(this);
                 }
             }
         }

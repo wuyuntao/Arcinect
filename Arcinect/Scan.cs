@@ -21,6 +21,7 @@ namespace Arcinect
 
             mainWindow.ColorCamera.Source = this.scanner.Frame.ColorBitmap;
             mainWindow.DepthCamera.Source = this.scanner.Frame.DepthBitmap;
+            MainWindow.VolumeCamera.Source = this.volume.VolumeBitmap;
         }
 
         protected override void Become(MainWindow.State nextState)
@@ -29,6 +30,7 @@ namespace Arcinect
 
             MainWindow.ColorCamera.Source = null;
             MainWindow.DepthCamera.Source = null;
+            MainWindow.VolumeCamera.Source = null;
 
             base.Become(nextState);
         }

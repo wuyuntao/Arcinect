@@ -9,8 +9,8 @@
         <Button Name="StopButton" Content="Stop" HorizontalAlignment="Left" Margin="520,10,0,0" VerticalAlignment="Top" Width="150" Click="StopButton_Click"/>
         <Button Name="SaveButton" Content="Save" HorizontalAlignment="Left" Margin="690,10,0,0" VerticalAlignment="Top" Width="150" Click="SaveButton_Click"/>
 
-        <Image Name="ColorCamera" HorizontalAlignment="Left" Height="270" Margin="10,60,0,0" VerticalAlignment="Top" Width="480" Stretch="UniformToFill" />
-        <Image Name="DepthCamera" HorizontalAlignment="Left" Height="270" Margin="500,60,0,0" VerticalAlignment="Top" Width="326" Stretch="UniformToFill" />
-        <Viewport3D Name="ViewportCamera" HorizontalAlignment="Left" VerticalAlignment="Top" Width="326" Height="270" Margin="836,60,0,0" />
+        <Image Name="ColorCamera" HorizontalAlignment="Left" VerticalAlignment="Top" Height="270" Width="480" Margin="10,60,0,0" Stretch="UniformToFill" />
+        <Image Name="DepthCamera" HorizontalAlignment="Left" VerticalAlignment="Top" Height="270" Width="326" Margin="500,60,0,0" Stretch="UniformToFill" />
+        <Image Name="VolumeCamera" HorizontalAlignment="Left" VerticalAlignment="Top" Width="326" Height="270" Margin="836,60,0,0" Stretch="UniformToFill" />
     </Grid>
 </Window>
