@@ -77,8 +77,6 @@
     <Compile Include="Scanner.cs" />
     <Compile Include="VolumeBuilder.cs" />
     <Compile Include="VolumeBuilderPreferences.cs" />
-    <Compile Include="Wpf3DTools\MathUtils.cs" />
-    <Compile Include="Wpf3DTools\ScreenSpaceLines3D.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
