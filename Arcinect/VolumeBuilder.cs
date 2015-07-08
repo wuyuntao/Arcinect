@@ -851,17 +851,16 @@ namespace Arcinect
         private void UpdateVolumeData()
         {
             // For capture color
-            this.volume.CalculatePointCloud(this.raycastPointCloudFrame, this.shadedSurfaceFrame, this.worldToCameraTransform);
+            //this.volume.CalculatePointCloud(this.raycastPointCloudFrame, this.shadedSurfaceFrame, this.worldToCameraTransform);
 
             this.volume.CalculatePointCloud(this.raycastPointCloudFrame, this.worldToCameraTransform);
 
             // Shade point cloud frame for rendering
             FusionDepthProcessor.ShadePointCloud(
-                this.raycastPointCloudFrame,
-                this.worldToCameraTransform,
-                this.worldToBGRTransform,
-                this.shadedSurfaceFrame,
-                 null);
+                    this.raycastPointCloudFrame,
+                    this.worldToCameraTransform,
+                    this.worldToBGRTransform,
+                    this.shadedSurfaceFrame, null);
 
             // Copy pixel data to pixel buffer
             this.shadedSurfaceFrame.CopyPixelDataTo(this.shadedSurfaceFramePixelsArgb);
