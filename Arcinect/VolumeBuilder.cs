@@ -875,6 +875,11 @@ namespace Arcinect
 
         #endregion
 
+        public ColorMesh CreateMesh()
+        {
+            return this.volume.CalculateMesh(1);
+        }
+
         #region Properties
 
         public BitmapSource VolumeBitmap

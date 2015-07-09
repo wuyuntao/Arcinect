@@ -36,7 +36,7 @@ namespace Arcinect
             base.DisposeManaged();
         }
 
-        public void Write(Mesh mesh)
+        public void Write(ColorMesh mesh)
         {
             if (mesh == null)
             {

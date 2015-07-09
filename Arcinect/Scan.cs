@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Win32;
 namespace Arcinect
 {
     class Scan : MainWindow.State
@@ -27,6 +28,7 @@ namespace Arcinect
         protected override void Become(MainWindow.State nextState)
         {
             SafeDispose(ref this.scanner);
+            SafeDispose(ref this.volume);
 
             MainWindow.ColorCamera.Source = null;
             MainWindow.DepthCamera.Source = null;
@@ -45,6 +47,20 @@ namespace Arcinect
         public override void SaveButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             base.SaveButton_Click(sender, e);
+
+            var dialog = new SaveFileDialog()
+            {
+                FileName = "ArcinectMesh.obj",
+                Filter = "OBJ Mesh Files|*.obj|All Files|*.*",
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                using (var writer = new ObjMeshWriter(dialog.FileName))
+                {
+                    writer.Write(this.volume.CreateMesh());
+                }
+            }
         }
     }
 }
