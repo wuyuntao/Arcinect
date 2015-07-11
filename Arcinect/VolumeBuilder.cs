@@ -492,34 +492,25 @@ namespace Arcinect
         /// </summary>
         /// <param name="dest">The destination depth image.</param>
         /// <param name="factor">The downsample factor (2=x/2,y/2, 4=x/4,y/4, 8=x/8,y/8, 16=x/16,y/16).</param>
-        private unsafe void DownsampleDepthFrameNearestNeighbor()
+        private void DownsampleDepthFrameNearestNeighbor()
         {
             var width = this.source.Frame.DepthWidth;
             var height = this.source.Frame.DepthHeight;
             var downsampledWidth = this.source.Frame.DepthWidth / this.preferences.DownsampleFactor;
             var downsampledHeight = this.source.Frame.DepthHeight / this.preferences.DownsampleFactor;
 
-            fixed (ushort* rawDepthPixelPtr = this.source.Frame.DepthData)
+            for (var y = 0; y < downsampledHeight; y++)
             {
-                var rawDepthPixels = (ushort*)rawDepthPixelPtr;
+                int flippedDestIndex = (y * downsampledWidth) + (downsampledWidth - 1);
+                int sourceIndex = y * width * this.preferences.DownsampleFactor;
 
-                // Horizontal flip the color image as the standard depth image is flipped internally in Kinect Fusion
-                // to give a viewpoint as though from behind the Kinect looking forward by default.
-                Parallel.For(
-                    0,
-                    downsampledHeight,
-                    y =>
-                    {
-                        int flippedDestIndex = (y * downsampledWidth) + (downsampledWidth - 1);
-                        int sourceIndex = y * width * this.preferences.DownsampleFactor;
-
-                        for (int x = 0; x < downsampledWidth; ++x, --flippedDestIndex, sourceIndex += this.preferences.DownsampleFactor)
-                        {
-                            // Copy depth value
-                            this.downsampledDepthData[flippedDestIndex] = (float)rawDepthPixels[sourceIndex] * 0.001f;
-                        }
-                    });
+                for (int x = 0; x < downsampledWidth; ++x, --flippedDestIndex, sourceIndex += this.preferences.DownsampleFactor)
+                {
+                    // Copy depth value
+                    this.downsampledDepthData[flippedDestIndex] = (float)this.source.Frame.DepthData[sourceIndex] * 0.001f;
+                }
             }
+
 
             this.downsampledDepthFloatFrame.CopyPixelDataFrom(this.downsampledDepthData);
         }
@@ -528,7 +519,7 @@ namespace Arcinect
         /// Up sample color delta from reference frame with nearest neighbor - replicates pixels
         /// </summary>
         /// <param name="factor">The up sample factor (2=x*2,y*2, 4=x*4,y*4, 8=x*8,y*8, 16=x*16,y*16).</param>
-        private unsafe void UpsampleColorDeltasFrameNearestNeighbor()
+        private void UpsampleColorDeltasFrameNearestNeighbor()
         {
             var width = this.source.Frame.DepthWidth;
             var height = this.source.Frame.DepthHeight;
@@ -538,37 +529,26 @@ namespace Arcinect
 
             this.downsampledDeltaFromReferenceFrameColorFrame.CopyPixelDataTo(this.downsampledDeltaFromReferenceColorPixels);
 
-            // Here we make use of unsafe code to just copy the whole pixel as an int for performance reasons, as we do
-            // not need access to the individual rgba components.
-            fixed (int* rawColorPixelPtr = this.downsampledDeltaFromReferenceColorPixels)
+            for (var y = 0; y < downsampledHeight; y++)
             {
-                var rawColorPixels = (int*)rawColorPixelPtr;
+                var destIndex = y * width * factor;
+                var sourceColorIndex = y * downsampledWidth;
 
-                // Note we run this only for the source image height pixels to sparsely fill the destination with rows
-                Parallel.For(
-                    0,
-                    downsampledHeight,
-                    y =>
+                for (var x = 0; x < downsampledWidth; ++x, ++sourceColorIndex)
+                {
+                    var color = this.source.Frame.DepthData[sourceColorIndex];
+
+                    // Replicate pixels horizontally
+                    for (var colFactorIndex = 0; colFactorIndex < factor; ++colFactorIndex, ++destIndex)
                     {
-                        var destIndex = y * width * factor;
-                        var sourceColorIndex = y * downsampledWidth;
-
-                        for (var x = 0; x < downsampledWidth; ++x, ++sourceColorIndex)
+                        // Replicate pixels vertically
+                        for (var rowFactorIndex = 0; rowFactorIndex < factor; ++rowFactorIndex)
                         {
-                            var color = rawColorPixels[sourceColorIndex];
-
-                            // Replicate pixels horizontally
-                            for (var colFactorIndex = 0; colFactorIndex < factor; ++colFactorIndex, ++destIndex)
-                            {
-                                // Replicate pixels vertically
-                                for (var rowFactorIndex = 0; rowFactorIndex < factor; ++rowFactorIndex)
-                                {
-                                    // Copy color pixel
-                                    this.deltaFromReferenceFramePixelsArgb[destIndex + (rowFactorIndex * width)] = color;
-                                }
-                            }
+                            // Copy color pixel
+                            this.deltaFromReferenceFramePixelsArgb[destIndex + (rowFactorIndex * width)] = color;
                         }
-                    });
+                    }
+                }
             }
 
             var sizeOfInt = sizeof(int);
@@ -747,34 +727,24 @@ namespace Arcinect
         /// <summary>
         /// Process input color image to make it equal in size to the depth image
         /// </summary>
-        private unsafe void ProcessColorForCameraPoseFinder()
+        private void ProcessColorForCameraPoseFinder()
         {
             var rawDepthHeight = this.source.Frame.DepthWidth / 4 * 3;
             var factor = this.source.Frame.ColorWidth / rawDepthHeight;
             var filledZeroMargin = (this.source.Frame.DepthHeight - rawDepthHeight) / 2;
 
-            // Here we make use of unsafe code to just copy the whole pixel as an int for performance reasons, as we do
-            // not need access to the individual rgba components.
-            fixed (byte* ptrColorPixels = this.source.Frame.ColorData)
+            for (var y = filledZeroMargin; y < this.source.Frame.DepthHeight - filledZeroMargin; y++)
             {
-                var rawColorPixels = (int*)ptrColorPixels;
+                var destIndex = y * this.source.Frame.DepthWidth;
 
-                Parallel.For(
-                    filledZeroMargin,
-                    this.source.Frame.DepthHeight - filledZeroMargin,
-                    y =>
-                    {
-                        var destIndex = y * this.source.Frame.DepthWidth;
+                for (var x = 0; x < this.source.Frame.DepthWidth; ++x, ++destIndex)
+                {
+                    var srcX = (int)(x * factor);
+                    var srcY = (int)(y * factor);
+                    var sourceColorIndex = (srcY * this.source.Frame.ColorWidth) + srcX;
 
-                        for (var x = 0; x < this.source.Frame.DepthWidth; ++x, ++destIndex)
-                        {
-                            var srcX = (int)(x * factor);
-                            var srcY = (int)(y * factor);
-                            var sourceColorIndex = (srcY * this.source.Frame.ColorWidth) + srcX;
-
-                            this.resampledColorData[destIndex] = rawColorPixels[sourceColorIndex];
-                        }
-                    });
+                    this.resampledColorData[destIndex] = this.source.Frame.ColorData[destIndex];
+                }
             }
 
             this.resampledColorFrame.CopyPixelDataFrom(this.resampledColorData);
