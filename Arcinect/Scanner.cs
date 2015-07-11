@@ -86,6 +86,18 @@ namespace Arcinect
         }
 
         /// <summary>
+        /// Close scanner
+        /// </summary>
+        public static void Close()
+        {
+            if (instance != null)
+            {
+                instance.Dispose();
+                instance = null;
+            }
+        }
+
+        /// <summary>
         /// Check to ensure suitable DirectX11 compatible hardware exists before initializing Kinect Fusion
         /// </summary>
         /// <returns></returns>
@@ -121,16 +133,6 @@ namespace Arcinect
                 logger.Error("Unknown exception", ex);
                 return false;
             }
-        }
-
-        /// <summary>
-        /// Close scanner
-        /// </summary>
-        public void Close()
-        {
-            logger.Trace("Closing");
-
-            Dispose();
         }
 
         /// <summary>

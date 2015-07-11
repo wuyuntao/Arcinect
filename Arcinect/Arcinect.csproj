@@ -40,6 +40,12 @@
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="FlatBuffers">
+      <HintPath>..\lib\FlatBuffers\FlatBuffers.dll</HintPath>
+    </Reference>
+    <Reference Include="FlatBuffersSchema">
+      <HintPath>..\lib\FlatBuffers\FlatBuffersSchema.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Kinect, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Kinect.2.0.1410.19000\lib\net45\Microsoft.Kinect.dll</HintPath>
     </Reference>
@@ -70,8 +76,11 @@
     </ApplicationDefinition>
     <Compile Include="Disposable.cs" />
     <Compile Include="Frame.cs" />
+    <Compile Include="GeneratedCode\Arcinect\Schema\FrameData.cs" />
+    <Compile Include="GeneratedCode\Arcinect\Schema\FrameTimeline.cs" />
     <Compile Include="MathUtils.cs" />
     <Compile Include="ObjMeshWriter.cs" />
+    <Compile Include="Recorder.cs" />
     <Compile Include="Scan.cs" />
     <Compile Include="Idle.cs" />
     <Compile Include="Scanner.cs" />
@@ -111,6 +120,7 @@
     <Content Include="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="FrameData.fbs" />
     <None Include="NLog.xsd">
       <SubType>Designer</SubType>
     </None>
@@ -130,6 +140,10 @@
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>cd $(ProjectDir)
+$(SolutionDir)lib\FlatBuffers\flatc.exe -n -o GeneratedCode FrameData.fbs</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

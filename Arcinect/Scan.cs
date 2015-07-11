@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.Win32;
+using System.Threading;
 namespace Arcinect
 {
     class Scan : MainWindow.State
@@ -8,7 +9,9 @@ namespace Arcinect
 
         private VolumeBuilder volume;
 
-        public Scan(MainWindow mainWindow)
+        private Recorder recorder;
+
+        public Scan(MainWindow mainWindow, string timelineFileName)
             : base(mainWindow)
         {
             mainWindow.ScanButton.IsEnabled = false;
@@ -18,6 +21,11 @@ namespace Arcinect
             mainWindow.SaveButton.IsEnabled = true;
 
             this.scanner = Scanner.Open();
+            this.scanner.Frame.OnDataUpdate += Frame_OnDataUpdate;
+
+            if (timelineFileName != null)
+                this.recorder = new Recorder(timelineFileName);
+
             this.volume = new VolumeBuilder(scanner, mainWindow.Dispatcher);
 
             mainWindow.ColorCamera.Source = this.scanner.Frame.ColorBitmap;
@@ -27,26 +35,24 @@ namespace Arcinect
 
         protected override void DisposeManaged()
         {
-            Become(null);
-
-            base.DisposeManaged();
-        }
-
-        protected override void Become(MainWindow.State nextState)
-        {
-            SafeDispose(ref this.scanner);
+            //SafeDispose(ref this.scanner);
             SafeDispose(ref this.volume);
 
             MainWindow.ColorCamera.Source = null;
             MainWindow.DepthCamera.Source = null;
             MainWindow.VolumeCamera.Source = null;
 
-            base.Become(nextState);
+            base.DisposeManaged();
         }
 
         public override void StopButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             base.StopButton_Click(sender, e);
+
+            if (this.recorder != null)
+            {
+                this.recorder.Save();
+            }
 
             Become(new Idle(MainWindow));
         }
@@ -58,7 +64,7 @@ namespace Arcinect
             var dialog = new SaveFileDialog()
             {
                 FileName = "ArcinectMesh.obj",
-                Filter = "OBJ Mesh Files|*.obj|All Files|*.*",
+                Filter = "OBJ Mesh Files|*.obj",
             };
 
             if (dialog.ShowDialog() == true)
@@ -68,6 +74,12 @@ namespace Arcinect
                     writer.Write(this.volume.CreateMesh());
                 }
             }
+        }
+
+        private void Frame_OnDataUpdate(object sender)
+        {
+            if (this.recorder != null)
+                this.recorder.AppendFrame(this.scanner.Frame.ColorData, this.scanner.Frame.DepthData);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using Microsoft.Win32;
+using System.Windows;
 
 namespace Arcinect
 {
@@ -18,14 +19,25 @@ namespace Arcinect
         {
             base.ScanButton_Click(sender, e);
 
-            Become(new Scan(MainWindow));
+            Become(new Scan(MainWindow, null));
         }
 
         public override void RecordButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             base.RecordButton_Click(sender, e);
 
-            MessageBox.Show("Not implemented yet", "Record");
+            var dialog = new SaveFileDialog()
+            {
+                FileName = "ArcinectFrameTimeline.ftl",
+                Filter = "Frame Timeline Files|*.ftl",
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                logger.Trace("Record to file {0}", dialog.FileName);
+
+                Become(new Scan(MainWindow, dialog.FileName));
+            }
         }
 
         public override void ReplayButton_Click(object sender, RoutedEventArgs e)

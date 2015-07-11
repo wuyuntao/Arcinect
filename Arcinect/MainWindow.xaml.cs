@@ -56,6 +56,11 @@ namespace Arcinect
 
             protected virtual void Become(State nextState)
             {
+                if (this.mainWindow.state != null)
+                {
+                    this.mainWindow.state.Dispose();
+                }
+
                 this.mainWindow.state = nextState;
 
                 if (nextState != null)
@@ -139,6 +144,8 @@ namespace Arcinect
                 state.Dispose();
                 state = null;
             }
+
+            Scanner.Close();        // Make sure that Kinect sensor is closed
         }
 
         private void ScanButton_Click(object sender, RoutedEventArgs e)

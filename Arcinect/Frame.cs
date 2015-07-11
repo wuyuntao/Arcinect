@@ -11,7 +11,7 @@ namespace Arcinect
     /// <summary>
     /// Frame Data
     /// </summary>
-    sealed class Frame : Disposable
+    sealed class Frame
     {
         /// <summary>
         /// Logger of current class
