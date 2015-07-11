@@ -18,11 +18,18 @@ namespace Arcinect
             mainWindow.SaveButton.IsEnabled = true;
 
             this.scanner = Scanner.Open();
-            this.volume = new VolumeBuilder(scanner);
+            this.volume = new VolumeBuilder(scanner, mainWindow.Dispatcher);
 
             mainWindow.ColorCamera.Source = this.scanner.Frame.ColorBitmap;
             mainWindow.DepthCamera.Source = this.scanner.Frame.DepthBitmap;
             MainWindow.VolumeCamera.Source = this.volume.VolumeBitmap;
+        }
+
+        protected override void DisposeManaged()
+        {
+            Become(null);
+
+            base.DisposeManaged();
         }
 
         protected override void Become(MainWindow.State nextState)

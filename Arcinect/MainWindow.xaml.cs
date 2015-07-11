@@ -58,7 +58,10 @@ namespace Arcinect
             {
                 this.mainWindow.state = nextState;
 
-                logger.Trace("State changed from {0} to {1}", GetType().Name, nextState.GetType().Name);
+                if (nextState != null)
+                    logger.Trace("State changed from {0} to {1}", GetType().Name, nextState.GetType().Name);
+                else
+                    logger.Trace("State stoped from {0}", GetType().Name);
             }
 
             #region Events

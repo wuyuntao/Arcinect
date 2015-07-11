@@ -1,6 +1,7 @@
 ﻿using Microsoft.Kinect;
 using NLog;
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -125,6 +126,8 @@ namespace Arcinect
             var colorFrameDescription = colorFrame.FrameDescription;
             if (this.colorWidth == colorFrameDescription.Width && this.colorHeight == colorFrameDescription.Height)
             {
+                var stopwatch = Stopwatch.StartNew();
+
                 colorFrame.CopyConvertedFrameDataToArray(this.colorData, ColorImageFormat.Rgba);
 
                 using (var colorBuffer = colorFrame.LockRawImageBuffer())
@@ -142,7 +145,7 @@ namespace Arcinect
                     this.colorBitmap.Unlock();
                 }
 
-                logger.Trace("ColorFrame updated");
+                logger.Trace("ColorFrame updated. Spent: {0}ms", stopwatch.ElapsedMilliseconds);
             }
             else
             {
@@ -156,6 +159,8 @@ namespace Arcinect
             var depthFrameDescription = depthFrame.FrameDescription;
             if (this.depthWidth == depthFrameDescription.Width && this.depthHeight == depthFrameDescription.Height)
             {
+                var stopwatch = Stopwatch.StartNew();
+
                 depthFrame.CopyFrameDataToArray(this.depthData);
 
                 using (var depthBuffer = depthFrame.LockImageBuffer())
@@ -171,7 +176,7 @@ namespace Arcinect
                     this.depthBitmap.Unlock();
                 }
 
-                logger.Trace("DepthFrame updated");
+                logger.Trace("DepthFrame updated. Spent: {0}ms", stopwatch.ElapsedMilliseconds);
             }
             else
             {

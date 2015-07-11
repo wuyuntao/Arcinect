@@ -1,10 +1,13 @@
 ﻿using Microsoft.Kinect.Fusion;
 using NLog;
 using System;
+using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace Arcinect
 {
@@ -24,6 +27,11 @@ namespace Arcinect
         /// Data source
         /// </summary>
         private Scanner source;
+
+        /// <summary>
+        /// UI dispatcher
+        /// </summary>
+        private Dispatcher dispatcher;
 
         /// <summary>
         /// The configuration to build volume 
@@ -197,7 +205,22 @@ namespace Arcinect
         /// </summary>
         private bool cameraPoseFinderAvailable;
 
-        public VolumeBuilder(Scanner source, VolumeBuilderPreferences parameters)
+        /// <summary>
+        /// Worker thread to process color and depth data
+        /// </summary>
+        private Thread workerThread;
+
+        /// <summary>
+        /// Event to stop worker thread
+        /// </summary>
+        private ManualResetEvent workerThreadStopEvent = new ManualResetEvent(false);
+
+        /// <summary>
+        /// Event to notify that data is ready for process
+        /// </summary>
+        private ManualResetEvent frameDataUpdateEvent = new ManualResetEvent(false);
+
+        public VolumeBuilder(Scanner source, Dispatcher dispatcher, VolumeBuilderPreferences parameters)
         {
             if (source == null)
             {
@@ -205,7 +228,7 @@ namespace Arcinect
             }
 
             this.source = source;
-            this.source.Frame.OnDataUpdate += OnFrameDataUpdate;
+            this.dispatcher = dispatcher;
 
             this.preferences = parameters;
 
@@ -262,14 +285,21 @@ namespace Arcinect
 
             // Create a camera pose finder with default parameters
             this.cameraPoseFinder = CameraPoseFinder.FusionCreateCameraPoseFinder(CameraPoseFinderParameters.Defaults);
+
+            this.workerThread = new Thread(WorkerThreadProc);
+            this.workerThread.Start();
+            this.source.Frame.OnDataUpdate += OnFrameDataUpdate;
         }
 
-        public VolumeBuilder(Scanner source)
-            : this(source, new VolumeBuilderPreferences())
+        public VolumeBuilder(Scanner source, Dispatcher dispatcher)
+            : this(source, dispatcher, new VolumeBuilderPreferences())
         { }
 
         protected override void DisposeManaged()
         {
+            this.workerThreadStopEvent.Set();
+            this.workerThread.Join();
+
             this.source.Frame.OnDataUpdate -= OnFrameDataUpdate;
 
             SafeDispose(ref this.volume);
@@ -337,11 +367,34 @@ namespace Arcinect
             logger.Trace("Finish reset reconstruction");
         }
 
+        #region Worker Thread
+
+        private void WorkerThreadProc(object state)
+        {
+            var events = new WaitHandle[] { this.frameDataUpdateEvent, this.workerThreadStopEvent };
+
+            for (var i = WaitHandle.WaitAny(events); i != 1; i = WaitHandle.WaitAny(events))
+            {
+                switch (i)
+                {
+                    case 0:
+                        this.frameDataUpdateEvent.Reset();
+                        Process();
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException("Unexpected event index");
+                }
+            }
+        }
+
+        #endregion
+
         #region Process frames
 
         private void OnFrameDataUpdate(object sender)
         {
-            Process();
+            this.frameDataUpdateEvent.Set();
         }
 
         /// <summary>
@@ -349,9 +402,10 @@ namespace Arcinect
         /// </summary>
         private void Process()
         {
-
             try
             {
+                var stopwatch = Stopwatch.StartNew();
+
                 // Check if camera pose finder is available
                 this.cameraPoseFinderAvailable = this.cameraPoseFinder.GetStoredPoseCount() > 0;
 
@@ -378,6 +432,8 @@ namespace Arcinect
                         UpdateCameraPoseFinder();
                     }
                 }
+
+                logger.Trace("Volume data processed. Spent {0}ms", stopwatch.ElapsedMilliseconds);
             }
             catch (InvalidOperationException ex)
             {
@@ -835,12 +891,24 @@ namespace Arcinect
             // Copy pixel data to pixel buffer
             this.shadedSurfaceFrame.CopyPixelDataTo(this.shadedSurfaceFramePixelsArgb);
 
-            // Write pixels to bitmap
-            this.volumeBitmap.WritePixels(
-                    new Int32Rect(0, 0, this.shadedSurfaceFrame.Width, this.shadedSurfaceFrame.Height),
-                    this.shadedSurfaceFramePixelsArgb,
-                    this.volumeBitmap.PixelWidth * sizeof(int),
-                    0);
+            this.dispatcher.BeginInvoke((Action)RenderVolumeBitmap);
+        }
+
+        private void RenderVolumeBitmap()
+        {
+            if (!this.Disposed)
+            {
+                this.volumeBitmap.Lock();
+
+                // Write pixels to bitmap
+                this.volumeBitmap.WritePixels(
+                        new Int32Rect(0, 0, this.shadedSurfaceFrame.Width, this.shadedSurfaceFrame.Height),
+                        this.shadedSurfaceFramePixelsArgb,
+                        this.volumeBitmap.PixelWidth * sizeof(int),
+                        0);
+
+                this.volumeBitmap.Unlock();
+            }
         }
 
         #endregion
