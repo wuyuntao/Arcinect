@@ -1,4 +1,5 @@
-﻿using Microsoft.Kinect.Fusion;
+﻿using Arcinect.Properties;
+using Microsoft.Kinect.Fusion;
 using NLog;
 using System;
 using System.Diagnostics;
@@ -14,14 +15,14 @@ namespace Arcinect
     class VolumeBuilder : Disposable
     {
         /// <summary>
-        /// Default DPI of system
-        /// </summary>
-        private const float DefaultSystemDPI = 96;
-
-        /// <summary>
         /// Logger of current class
         /// </summary>
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
+        /// <summary>
+        /// Settings of Arcinect
+        /// </summary>
+        private static readonly Settings settings = Settings.Default;
 
         /// <summary>
         /// Data source
@@ -32,11 +33,6 @@ namespace Arcinect
         /// UI dispatcher
         /// </summary>
         private Dispatcher dispatcher;
-
-        /// <summary>
-        /// The configuration to build volume 
-        /// </summary>
-        private VolumeBuilderPreferences preferences;
 
         /// <summary>
         /// The Kinect Fusion volume, enabling color reconstruction
@@ -208,7 +204,7 @@ namespace Arcinect
         /// </summary>
         private ManualResetEvent frameDataUpdateEvent = new ManualResetEvent(false);
 
-        public VolumeBuilder(Scanner source, Dispatcher dispatcher, VolumeBuilderPreferences parameters)
+        public VolumeBuilder(Scanner source, Dispatcher dispatcher)
         {
             if (source == null)
             {
@@ -218,8 +214,6 @@ namespace Arcinect
             this.source = source;
             this.dispatcher = dispatcher;
 
-            this.preferences = parameters;
-
             // Set the world-view transform to identity, so the world origin is the initial camera location.
             this.worldToCameraTransform = Matrix4.Identity;
 
@@ -228,14 +222,14 @@ namespace Arcinect
             // as the world origin starts located at the center of the front face of the volume,
             // hence we need to map negative x,y world vertex locations to positive color values.
             this.worldToBGRTransform = Matrix4.Identity;
-            this.worldToBGRTransform.M11 = this.preferences.VoxelsPerMeter / this.preferences.VoxelsX;
-            this.worldToBGRTransform.M22 = this.preferences.VoxelsPerMeter / this.preferences.VoxelsY;
-            this.worldToBGRTransform.M33 = this.preferences.VoxelsPerMeter / this.preferences.VoxelsZ;
+            this.worldToBGRTransform.M11 = settings.VoxelsPerMeter / settings.VoxelsX;
+            this.worldToBGRTransform.M22 = settings.VoxelsPerMeter / settings.VoxelsY;
+            this.worldToBGRTransform.M33 = settings.VoxelsPerMeter / settings.VoxelsZ;
             this.worldToBGRTransform.M41 = 0.5f;
             this.worldToBGRTransform.M42 = 0.5f;
             this.worldToBGRTransform.M44 = 1.0f;
 
-            var volumeParameters = new ReconstructionParameters(parameters.VoxelsPerMeter, parameters.VoxelsX, parameters.VoxelsY, parameters.VoxelsZ);
+            var volumeParameters = new ReconstructionParameters(settings.VoxelsPerMeter, settings.VoxelsX, settings.VoxelsY, settings.VoxelsZ);
             this.volume = ColorReconstruction.FusionCreateReconstruction(volumeParameters, ReconstructionProcessor.Amp, -1, this.worldToCameraTransform);
 
             var depthWidth = this.source.Frame.DepthWidth;
@@ -251,8 +245,8 @@ namespace Arcinect
             this.raycastPointCloudFrame = new FusionPointCloudImageFrame(depthWidth, depthHeight);
             this.depthPointCloudFrame = new FusionPointCloudImageFrame(depthWidth, depthHeight);
 
-            var downsampledDepthWidth = depthWidth / this.preferences.DownsampleFactor;
-            var downsampledDepthHeight = depthHeight / this.preferences.DownsampleFactor;
+            var downsampledDepthWidth = depthWidth / settings.DownsampleFactor;
+            var downsampledDepthHeight = depthHeight / settings.DownsampleFactor;
             var downsampledDepthSize = downsampledDepthWidth * downsampledDepthHeight;
 
             this.downsampledDepthFloatFrame = new FusionFloatImageFrame(downsampledDepthWidth, downsampledDepthHeight);
@@ -269,7 +263,7 @@ namespace Arcinect
 
             this.defaultWorldToVolumeTransform = this.volume.GetCurrentWorldToVolumeTransform();
 
-            this.volumeBitmap = new WriteableBitmap(depthWidth, depthHeight, DefaultSystemDPI, DefaultSystemDPI, PixelFormats.Bgr32, null);
+            this.volumeBitmap = new WriteableBitmap(depthWidth, depthHeight, settings.DefaultSystemDPI, settings.DefaultSystemDPI, PixelFormats.Bgr32, null);
 
             // Create a camera pose finder with default parameters
             this.cameraPoseFinder = CameraPoseFinder.FusionCreateCameraPoseFinder(CameraPoseFinderParameters.Defaults);
@@ -278,10 +272,6 @@ namespace Arcinect
             this.workerThread.Start();
             this.source.Frame.OnDataUpdate += OnFrameDataUpdate;
         }
-
-        public VolumeBuilder(Scanner source, Dispatcher dispatcher)
-            : this(source, dispatcher, new VolumeBuilderPreferences())
-        { }
 
         protected override void DisposeManaged()
         {
@@ -332,13 +322,13 @@ namespace Arcinect
                 // If set false, the default world origin is set to the center of the front face of the 
                 // volume, which has the effect of locating the volume directly in front of the initial camera
                 // position with the +Z axis into the volume along the initial camera direction of view.
-                if (this.preferences.TranslateResetPoseByMinDepthThreshold)
+                if (settings.TranslateResetPoseByMinDepthThreshold)
                 {
                     var worldToVolumeTransform = this.defaultWorldToVolumeTransform;
 
                     // Translate the volume in the Z axis by the minDepthClip distance
-                    float minDistance = Math.Min(this.preferences.MinDepthClip, this.preferences.MaxDepthClip);
-                    worldToVolumeTransform.M43 -= minDistance * this.preferences.VoxelsPerMeter;
+                    float minDistance = Math.Min(settings.MinDepthClip, settings.MaxDepthClip);
+                    worldToVolumeTransform.M43 -= minDistance * settings.VoxelsPerMeter;
 
                     this.volume.ResetReconstruction(this.worldToCameraTransform, worldToVolumeTransform);
                 }
@@ -398,7 +388,7 @@ namespace Arcinect
                 this.cameraPoseFinderAvailable = this.cameraPoseFinder.GetStoredPoseCount() > 0;
 
                 // Convert depth to float and render depth frame
-                this.volume.DepthToDepthFloatFrame(this.source.Frame.DepthData, this.depthFloatFrame, this.preferences.MinDepthClip, this.preferences.MaxDepthClip, false);
+                this.volume.DepthToDepthFloatFrame(this.source.Frame.DepthData, this.depthFloatFrame, settings.MinDepthClip, settings.MaxDepthClip, false);
 
                 // Track camera pose
                 TrackCamera();
@@ -414,8 +404,8 @@ namespace Arcinect
 
                     // Update camera pose finder, adding key frames to the database
                     if (!this.trackingHasFailedPreviously
-                        && this.successfulFrameCount > this.preferences.MinSuccessfulTrackingFramesForCameraPoseFinder
-                        && this.processedFrameCount % this.preferences.CameraPoseFinderProcessFrameCalculationInterval == 0)
+                        && this.successfulFrameCount > settings.MinSuccessfulTrackingFramesForCameraPoseFinder
+                        && this.processedFrameCount % settings.CameraPoseFinderProcessFrameCalculationInterval == 0)
                     {
                         UpdateCameraPoseFinder();
                     }
@@ -434,7 +424,7 @@ namespace Arcinect
         /// </summary>
         private void TrackCamera()
         {
-            bool calculateDeltaFrame = this.processedFrameCount % this.preferences.DeltaFrameCalculationInterval == 0;
+            bool calculateDeltaFrame = this.processedFrameCount % settings.DeltaFrameCalculationInterval == 0;
 
             // Get updated camera transform from image alignment
             var calculatedCameraPos = this.worldToCameraTransform;
@@ -482,7 +472,7 @@ namespace Arcinect
             DownsampleDepthFrameNearestNeighbor();
 
             // Smooth the depth frame
-            this.volume.SmoothDepthFloatFrame(this.downsampledDepthFloatFrame, this.downsampledSmoothDepthFloatFrame, this.preferences.SmoothingKernelWidth, this.preferences.SmoothingDistanceThreshold);
+            this.volume.SmoothDepthFloatFrame(this.downsampledDepthFloatFrame, this.downsampledSmoothDepthFloatFrame, settings.SmoothingKernelWidth, settings.SmoothingDistanceThreshold);
 
             // Calculate point cloud from the smoothed frame
             FusionDepthProcessor.DepthFloatFrameToPointCloud(this.downsampledSmoothDepthFloatFrame, this.downsampledDepthPointCloudFrame);
@@ -524,8 +514,8 @@ namespace Arcinect
                 trackingSucceeded = MathUtils.CheckTransformChange(
                     initialPose,
                     calculatedCameraPose,
-                    this.preferences.MaxTranslationDeltaAlignPointClouds,
-                    this.preferences.MaxRotationDeltaAlignPointClouds);
+                    settings.MaxTranslationDeltaAlignPointClouds,
+                    settings.MaxRotationDeltaAlignPointClouds);
             }
 
             return trackingSucceeded;
@@ -540,15 +530,15 @@ namespace Arcinect
         {
             var width = this.source.Frame.DepthWidth;
             var height = this.source.Frame.DepthHeight;
-            var downsampledWidth = this.source.Frame.DepthWidth / this.preferences.DownsampleFactor;
-            var downsampledHeight = this.source.Frame.DepthHeight / this.preferences.DownsampleFactor;
+            var downsampledWidth = this.source.Frame.DepthWidth / settings.DownsampleFactor;
+            var downsampledHeight = this.source.Frame.DepthHeight / settings.DownsampleFactor;
 
             for (var y = 0; y < downsampledHeight; y++)
             {
                 int flippedDestIndex = (y * downsampledWidth) + (downsampledWidth - 1);
-                int sourceIndex = y * width * this.preferences.DownsampleFactor;
+                int sourceIndex = y * width * settings.DownsampleFactor;
 
-                for (int x = 0; x < downsampledWidth; ++x, --flippedDestIndex, sourceIndex += this.preferences.DownsampleFactor)
+                for (int x = 0; x < downsampledWidth; ++x, --flippedDestIndex, sourceIndex += settings.DownsampleFactor)
                 {
                     // Copy depth value
                     this.downsampledDepthData[flippedDestIndex] = (float)this.source.Frame.DepthData[sourceIndex] * 0.001f;
@@ -567,9 +557,9 @@ namespace Arcinect
         {
             var width = this.source.Frame.DepthWidth;
             var height = this.source.Frame.DepthHeight;
-            var downsampledWidth = this.source.Frame.DepthWidth / this.preferences.DownsampleFactor;
-            var downsampledHeight = this.source.Frame.DepthHeight / this.preferences.DownsampleFactor;
-            var factor = this.preferences.DownsampleFactor;
+            var downsampledWidth = this.source.Frame.DepthWidth / settings.DownsampleFactor;
+            var downsampledHeight = this.source.Frame.DepthHeight / settings.DownsampleFactor;
+            var factor = settings.DownsampleFactor;
 
             this.downsampledDeltaFromReferenceFrameColorFrame.CopyPixelDataTo(this.downsampledDeltaFromReferenceColorPixels);
 
@@ -677,13 +667,13 @@ namespace Arcinect
             var poseCount = matchCandidates.GetPoseCount();
             var minDistance = matchCandidates.CalculateMinimumDistance();
 
-            if (poseCount == 0 || minDistance >= this.preferences.CameraPoseFinderDistanceThresholdReject)
+            if (poseCount == 0 || minDistance >= settings.CameraPoseFinderDistanceThresholdReject)
             {
                 return false;
             }
 
             // Smooth the depth frame
-            this.volume.SmoothDepthFloatFrame(this.depthFloatFrame, this.smoothDepthFloatFrame, this.preferences.SmoothingKernelWidth, this.preferences.SmoothingDistanceThreshold);
+            this.volume.SmoothDepthFloatFrame(this.depthFloatFrame, this.smoothDepthFloatFrame, settings.SmoothingKernelWidth, settings.SmoothingDistanceThreshold);
 
             // Calculate point cloud from the smoothed frame
             FusionDepthProcessor.DepthFloatFrameToPointCloud(this.smoothDepthFloatFrame, this.depthPointCloudFrame);
@@ -694,10 +684,10 @@ namespace Arcinect
             var bestNeighborIndex = -1;
             var bestNeighborCameraPose = Matrix4.Identity;
 
-            var bestNeighborAlignmentEnergy = this.preferences.MaxAlignPointCloudsEnergyForSuccess;
+            var bestNeighborAlignmentEnergy = settings.MaxAlignPointCloudsEnergyForSuccess;
 
             // Run alignment with best matched poseCount (i.e. k nearest neighbors (kNN))
-            var maxTests = Math.Min(this.preferences.MaxCameraPoseFinderPoseTests, poseCount);
+            var maxTests = Math.Min(settings.MaxCameraPoseFinderPoseTests, poseCount);
 
             var neighbors = matchCandidates.GetMatchPoses();
 
@@ -718,7 +708,7 @@ namespace Arcinect
                     out this.alignmentEnergy,
                     ref poseProposal);
 
-                var relocSuccess = success && this.alignmentEnergy < bestNeighborAlignmentEnergy && this.alignmentEnergy > this.preferences.MinAlignPointCloudsEnergyForSuccess;
+                var relocSuccess = success && this.alignmentEnergy < bestNeighborAlignmentEnergy && this.alignmentEnergy > settings.MinAlignPointCloudsEnergyForSuccess;
 
                 if (relocSuccess)
                 {
@@ -822,7 +812,7 @@ namespace Arcinect
                     && (!this.cameraPoseFinderAvailable
                     || (this.cameraPoseFinderAvailable
                     && !(this.trackingHasFailedPreviously
-                    && this.successfulFrameCount < this.preferences.MinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure)));
+                    && this.successfulFrameCount < settings.MinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure)));
 
             // Integrate the frame to volume
             if (integrateData)
@@ -833,7 +823,7 @@ namespace Arcinect
                 // Just integrate depth
                 this.volume.IntegrateFrame(
                     this.depthFloatFrame,
-                    this.preferences.IntegrationWeight,
+                    settings.IntegrationWeight,
                     this.worldToCameraTransform);
             }
         }
@@ -855,7 +845,7 @@ namespace Arcinect
             // horizontal mirroring setting does not have to be consistent between depth and color. It does have
             // to be consistent between camera pose finder database creation and calling FindCameraPose though,
             // hence we always reset both the reconstruction and database when changing the mirror depth setting.
-            this.cameraPoseFinder.ProcessFrame(this.depthFloatFrame, this.resampledColorFrame, this.worldToCameraTransform, this.preferences.CameraPoseFinderDistanceThresholdAccept,
+            this.cameraPoseFinder.ProcessFrame(this.depthFloatFrame, this.resampledColorFrame, this.worldToCameraTransform, settings.CameraPoseFinderDistanceThresholdAccept,
                     out addedPose, out poseHistoryTrimmed);
         }
 

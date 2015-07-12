@@ -1,4 +1,5 @@
-﻿using Microsoft.Kinect;
+﻿using Arcinect.Properties;
+using Microsoft.Kinect;
 using NLog;
 using System;
 using System.Diagnostics;
@@ -17,11 +18,6 @@ namespace Arcinect
         /// Logger of current class
         /// </summary>
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-
-        /// <summary>
-        /// Default DPI of system
-        /// </summary>
-        private const float DefaultSystemDPI = 96;
 
         /// <summary>
         /// Image width of color frame
@@ -69,15 +65,17 @@ namespace Arcinect
 
         public Frame(int colorWidth, int colorHeight, int depthWidth, int depthHeight)
         {
+            var defaultSystemDPI = Settings.Default.DefaultSystemDPI;
+
             this.colorWidth = colorWidth;
             this.colorHeight = colorHeight;
             this.colorData = new byte[colorWidth * colorHeight * sizeof(int)];
-            this.colorBitmap = new WriteableBitmap(colorWidth, colorHeight, DefaultSystemDPI, DefaultSystemDPI, PixelFormats.Bgr32, null);
+            this.colorBitmap = new WriteableBitmap(colorWidth, colorHeight, defaultSystemDPI, defaultSystemDPI, PixelFormats.Bgr32, null);
 
             this.depthWidth = depthWidth;
             this.depthHeight = depthHeight;
             this.depthData = new ushort[depthWidth * depthHeight];
-            this.depthBitmap = new WriteableBitmap(this.depthWidth, this.depthHeight, DefaultSystemDPI, DefaultSystemDPI, PixelFormats.Gray8, null);
+            this.depthBitmap = new WriteableBitmap(this.depthWidth, this.depthHeight, defaultSystemDPI, defaultSystemDPI, PixelFormats.Gray8, null);
         }
 
         /// <summary>

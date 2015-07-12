@@ -3,6 +3,7 @@ using System;
 
 namespace Arcinect
 {
+    /*
     class VolumeBuilderPreferences
     {
         /// <summary>
@@ -143,6 +144,6 @@ namespace Arcinect
         /// when the majority of a small volume is inside this distance.
         /// </summary>
         public bool TranslateResetPoseByMinDepthThreshold = true;
-
     }
+    */
 }

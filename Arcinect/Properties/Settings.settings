@@ -1,7 +1,75 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="uri:settings" CurrentProfile="(Default)">
-  <Profiles>
-    <Profile Name="(Default)" />
-  </Profiles>
-  <Settings />
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Arcinect.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="VoxelsPerMeter" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">1024</Value>
+    </Setting>
+    <Setting Name="VoxelsX" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2048</Value>
+    </Setting>
+    <Setting Name="VoxelsY" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2048</Value>
+    </Setting>
+    <Setting Name="VoxelsZ" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2048</Value>
+    </Setting>
+    <Setting Name="MinDepthClip" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">0.5</Value>
+    </Setting>
+    <Setting Name="MaxDepthClip" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">8</Value>
+    </Setting>
+    <Setting Name="DeltaFrameCalculationInterval" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="DownsampleFactor" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="SmoothingKernelWidth" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="SmoothingDistanceThreshold" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">0.04</Value>
+    </Setting>
+    <Setting Name="MaxTranslationDeltaAlignPointClouds" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">0.3</Value>
+    </Setting>
+    <Setting Name="MaxRotationDeltaAlignPointClouds" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">20</Value>
+    </Setting>
+    <Setting Name="CameraPoseFinderDistanceThresholdReject" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="MaxAlignPointCloudsEnergyForSuccess" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">0.006</Value>
+    </Setting>
+    <Setting Name="MaxCameraPoseFinderPoseTests" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">5</Value>
+    </Setting>
+    <Setting Name="MinAlignPointCloudsEnergyForSuccess" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MinSuccessfulTrackingFramesForCameraPoseFinderAfterFailure" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">200</Value>
+    </Setting>
+    <Setting Name="IntegrationWeight" Type="System.Int16" Scope="Application">
+      <Value Profile="(Default)">200</Value>
+    </Setting>
+    <Setting Name="CameraPoseFinderProcessFrameCalculationInterval" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">5</Value>
+    </Setting>
+    <Setting Name="MinSuccessfulTrackingFramesForCameraPoseFinder" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">5</Value>
+    </Setting>
+    <Setting Name="CameraPoseFinderDistanceThresholdAccept" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">0.1</Value>
+    </Setting>
+    <Setting Name="TranslateResetPoseByMinDepthThreshold" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DefaultSystemDPI" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">96</Value>
+    </Setting>
+  </Settings>
 </SettingsFile>

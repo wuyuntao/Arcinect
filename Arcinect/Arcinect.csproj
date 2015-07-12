@@ -84,6 +84,7 @@
     <Compile Include="Scan.cs" />
     <Compile Include="Idle.cs" />
     <Compile Include="Scanner.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="VolumeBuilder.cs" />
     <Compile Include="VolumeBuilderPreferences.cs" />
     <Page Include="MainWindow.xaml">
