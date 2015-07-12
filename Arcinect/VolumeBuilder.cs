@@ -168,18 +168,6 @@ namespace Arcinect
         private Matrix4 defaultWorldToVolumeTransform;
 
         /// <summary>
-        /// Parameter to translate the reconstruction based on the minimum depth setting. When set to
-        /// false, the reconstruction volume +Z axis starts at the camera lens and extends into the scene.
-        /// Setting this true in the constructor will move the volume forward along +Z away from the
-        /// camera by the minimum depth threshold to enable capture of very small reconstruction volume
-        /// by setting a non-identity world-volume transformation in the ResetReconstruction call.
-        /// Small volumes should be shifted, as the Kinect hardware has a minimum sensing limit of ~0.35m,
-        /// inside which no valid depth is returned, hence it is difficult to initialize and track robustly  
-        /// when the majority of a small volume is inside this distance.
-        /// </summary>
-        private bool translateResetPoseByMinDepthThreshold = true;
-
-        /// <summary>
         /// The counter for image process failures
         /// </summary>
         private int trackingErrorCount = 0;
@@ -344,7 +332,7 @@ namespace Arcinect
                 // If set false, the default world origin is set to the center of the front face of the 
                 // volume, which has the effect of locating the volume directly in front of the initial camera
                 // position with the +Z axis into the volume along the initial camera direction of view.
-                if (this.translateResetPoseByMinDepthThreshold)
+                if (this.preferences.TranslateResetPoseByMinDepthThreshold)
                 {
                     var worldToVolumeTransform = this.defaultWorldToVolumeTransform;
 
