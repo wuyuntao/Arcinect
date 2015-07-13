@@ -37,6 +37,7 @@ namespace Arcinect
         {
             //SafeDispose(ref this.scanner);
             SafeDispose(ref this.volume);
+            SafeDispose(ref this.recorder);
 
             MainWindow.ColorCamera.Source = null;
             MainWindow.DepthCamera.Source = null;
@@ -48,11 +49,6 @@ namespace Arcinect
         public override void StopButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             base.StopButton_Click(sender, e);
-
-            if (this.recorder != null)
-            {
-                this.recorder.Save();
-            }
 
             Become(new Idle(MainWindow));
         }

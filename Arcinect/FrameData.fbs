@@ -1,15 +1,9 @@
 namespace Arcinect.Schema;
 
-file_identifier "ARCI";
-
-table FrameTimeline {
-  frames: [FrameData];
-}
-
 table FrameData {
   time: uint;
   colorData: [ubyte];
   depthData: [ushort];
 }
 
-root_type FrameTimeline;
+root_type FrameData;

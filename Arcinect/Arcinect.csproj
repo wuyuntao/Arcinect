@@ -77,7 +77,6 @@
     <Compile Include="Disposable.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="GeneratedCode\Arcinect\Schema\FrameData.cs" />
-    <Compile Include="GeneratedCode\Arcinect\Schema\FrameTimeline.cs" />
     <Compile Include="MathUtils.cs" />
     <Compile Include="ObjMeshWriter.cs" />
     <Compile Include="Recorder.cs" />

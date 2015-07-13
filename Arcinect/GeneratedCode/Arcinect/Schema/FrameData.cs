@@ -39,6 +39,7 @@ public sealed class FrameData : Table {
     int o = builder.EndObject();
     return o;
   }
+  public static void FinishFrameDataBuffer(FlatBufferBuilder builder, int offset) { builder.Finish(offset); }
 };
 
 
