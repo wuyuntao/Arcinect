@@ -25,7 +25,7 @@ namespace Arcinect.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1024")]
+        [global::System.Configuration.DefaultSettingValueAttribute("256")]
         public float VoxelsPerMeter {
             get {
                 return ((float)(this["VoxelsPerMeter"]));
@@ -34,7 +34,7 @@ namespace Arcinect.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2048")]
+        [global::System.Configuration.DefaultSettingValueAttribute("512")]
         public int VoxelsX {
             get {
                 return ((int)(this["VoxelsX"]));
@@ -43,7 +43,7 @@ namespace Arcinect.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2048")]
+        [global::System.Configuration.DefaultSettingValueAttribute("512")]
         public int VoxelsY {
             get {
                 return ((int)(this["VoxelsY"]));
@@ -52,7 +52,7 @@ namespace Arcinect.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2048")]
+        [global::System.Configuration.DefaultSettingValueAttribute("512")]
         public int VoxelsZ {
             get {
                 return ((int)(this["VoxelsZ"]));
