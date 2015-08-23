@@ -30,7 +30,7 @@ namespace Arcinect
 
             mainWindow.ColorCamera.Source = this.scanner.Frame.ColorBitmap;
             mainWindow.DepthCamera.Source = this.scanner.Frame.DepthBitmap;
-            MainWindow.VolumeCamera.Source = this.volume.VolumeBitmap;
+            mainWindow.VolumeCamera.Source = this.volume.VolumeBitmap;
         }
 
         protected override void DisposeManaged()

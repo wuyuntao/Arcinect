@@ -44,7 +44,7 @@ namespace Arcinect
 
             if (this.sensor.IsOpen)
             {
-                this.reader = sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color);
+                this.reader = this.sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color);
 
                 var colorFrameDescription = this.sensor.ColorFrameSource.FrameDescription;
                 var depthFrameDescription = this.sensor.DepthFrameSource.FrameDescription;
@@ -140,10 +140,10 @@ namespace Arcinect
         /// </summary>
         protected override void DisposeManaged()
         {
-            if (sensor != null)
+            if (this.sensor != null)
             {
-                sensor.Close();
-                sensor = null;
+                this.sensor.Close();
+                this.sensor = null;
             }
 
             instance = null;
